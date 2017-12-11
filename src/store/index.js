@@ -331,12 +331,14 @@ const store = (function () {
         if (!web3) {
           return
         }
-        let TokenContract = web3.eth.contract(aeAbi)
-        TokenContract.at(state.token.address, (err, contract) => {
-          aeContract = contract
-          dispatch('setUnlocked', true)
-          window.globalTokenContract = contract
-        })
+        try {
+          aeContract = new web3.eth.Contract(aeAbi, state.token.address)
+          window.globalTokenContract = aeContract
+        } catch (error) {
+          console.log(error)
+        }
+        dispatch('setUnlocked', true)
+
         // dispatch('generateAddress', web3);
         dispatch('setAcountInterval')
         dispatch('mkProviderOptsForApps')
@@ -385,8 +387,8 @@ const store = (function () {
         })
       },
       signTransaction ({state}, {tx, appName}) {
-        const tokenAddress = web3.toHex(state.token.address).toLowerCase()
-        const to = tx.to ? web3.toHex(tx.to).toLowerCase() : null
+        const tokenAddress = web3.utils.toHex(state.token.address).toLowerCase()
+        const to = tx.to ? web3.utils.toHex(tx.to).toLowerCase() : null
         const isAeTokenTx = to === tokenAddress
         logTx(tx, tokenAddress)
 
@@ -411,8 +413,8 @@ const store = (function () {
             // transfer(_to, _value)
             // approveAndCall(_spender, _value, _data)
             if (method === 'approveAndCall' || method === 'approve' || method === 'transfer') {
-              let value = web3.toBigNumber(params.find(param => param.name === '_value').value)
-              // confirmMessage += ' which transfers ' + web3.fromWei(value, 'ether') + ' Æ-Token'
+              let value = web3.utils.toBN(params.find(param => param.name === '_value').value)
+              // confirmMessage += ' which transfers ' + web3.utils.fromWei(value, 'ether') + ' Æ-Token'
             }
             aeTokenTx = decodedData
           } else {
@@ -442,7 +444,7 @@ const store = (function () {
         })
       },
       signPersonalMessage (store, { msg, appName }) {
-        const asText = web3.toAscii(msg.data)
+        const asText = web3.utils.hexToAscii(msg.data)
         const state = store.state
         const activeIdentity = store.getters.activeIdentity;
         return new Promise((resolve, reject) => {
