@@ -1,11 +1,10 @@
 import Bignumber from 'bignumber.js'
-import Web from 'web3'
+import web3Utils from 'web3-utils'
 import {convertAE_USD, convertETH_USD} from '@/lib/currencyConverter'
 import ApproveButtons from '@/dialogs/ApproveButtons.vue'
 import DialogHeader from '@/dialogs/DialogHeader.vue'
 
-const {fromWei} = Web.prototype
-
+fromWei = web3Utils.fromWei
 import {
   AeModal,
   AeHeaderButton,
