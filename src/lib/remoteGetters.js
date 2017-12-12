@@ -10,7 +10,9 @@ const _createPromise = getter => new Promise(
   }
 )
 
-export const getEstimatedGas = (web3, tx) =>
-  _createPromise(web3.eth.estimateGas.bind(undefined, tx))
+export const getEstimatedGas = (web3, tx) =>{
+  console.log(web3)
+  return _createPromise(web3.eth.estimateGas.bind(undefined, tx))
+}
 
 export const getGasPrice = web3 => _createPromise(web3.eth.getGasPrice.bind(web3.eth))

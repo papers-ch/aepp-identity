@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import aeAbi from '../abi/aeternity-token-abi.json'
 import BigNumber from 'bignumber.js'
-import ZeroClientProvider from 'web3-provider-engine/zero'
+import ZeroClientProvider from 'web3-provider-engine'
 import lightwallet from 'eth-lightwallet'
 import Web3 from 'web3'
 var BN = Web3.utils.BN;
@@ -288,9 +288,11 @@ const store = (function () {
         }
       },
       initWeb3({getters, dispatch, commit, state}, pwDerivedKey) {
+        console.log('initweb3')
         if (!state.keystore) {
           return
         }
+        console.log('initweb3-')
         derivedKey = pwDerivedKey
         const opts = {
           getAccounts: function (cb) {
@@ -319,15 +321,12 @@ const store = (function () {
           rpcUrl: state.rpcUrl
         }
         // that.providerOpts = opts
-        try {
-          // let zero = new ZeroClientProvider(opts)
-          // console.log(zero)
-          // var web3 = new Web3(zero);
+        let zero = new ZeroClientProvider(opts)
+        // console.log(zero)
+        web3 = new Web3(zero);
+        global.web3 = web3
+        // web3 = new Web3(new Web3.providers.HttpProvider(state.rpcUrl))
 
-          web3 = new Web3(new Web3.providers.HttpProvider(state.rpcUrl))
-        } catch (e) {
-          console.error(e)
-        }
         if (!web3) {  
           return
         }
@@ -383,17 +382,17 @@ const store = (function () {
       },
 
       async signTransaction ({state}, {tx, appName}) {
-        const tokenAddress = web3.toHex(state.token.address).toLowerCase()
-        const to = tx.to ? web3.toHex(tx.to).toLowerCase() : null
+        const tokenAddress = Web3.utils.toHex(state.token.address).toLowerCase()
+        const to = tx.to ? Web3.utils.toHex(tx.to).toLowerCase() : null
         const isAeTokenTx = to === tokenAddress
         logTx(tx, tokenAddress)
-
+        console.log(web3)
         const estimateGas = getEstimatedGas.bind(undefined, web3, tx)
         const _getGasPrice = getGasPrice.bind(undefined, web3)
         let aeTokenTx = {}
 
         tx.gas = tx.gas || await new Promise((resolve, reject) => {
-          web3.eth.estimateGas(tx, (error, result) => error ? reject(error) : resolve(result))
+          Web3.eth.estimateGas(tx, (error, result) => error ? reject(error) : resolve(result))
         })
 
         if (isAeTokenTx) {
@@ -413,7 +412,7 @@ const store = (function () {
             // transfer(_to, _value)
             // approveAndCall(_spender, _value, _data)
             if (method === 'approveAndCall' || method === 'approve' || method === 'transfer') {
-              let value = web3.utils.toBN(params.find(param => param.name === '_value').value)
+              let value = Web3.utils.toBN(params.find(param => param.name === '_value').value)
               // confirmMessage += ' which transfers ' + web3.utils.fromWei(value.toString(), 'ether') + ' Æ-Token'
             }
             aeTokenTx = decodedData
@@ -444,7 +443,7 @@ const store = (function () {
         })
       },
       signPersonalMessage (store, { msg, appName }) {
-        const asText = web3.utils.hexToAscii(msg.data)
+        const asText = Web3.utils.hexToAscii(msg.data)
         const state = store.state
         const activeIdentity = store.getters.activeIdentity;
         return new Promise((resolve, reject) => {
