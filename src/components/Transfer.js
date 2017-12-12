@@ -14,7 +14,7 @@ import {swiper as Swiper, swiperSlide as SwiperSlide} from 'vue-awesome-swiper'
 import Web3 from 'web3'
 import ZeroClientProvider from 'web3-provider-engine/zero'
 import web3Utils from 'web3-utils'
-
+import {BN} from 'web3-utils'
 let web3
 
 const commonSwiperOptions = {
@@ -55,7 +55,7 @@ export default {
   filters: {
     fromWei(value) {
       if (!web3Utils) return ''
-      return web3Utils.fromWei(value)
+      return web3Utils.fromWei(value.toString())
     }
   },
   data() {
@@ -175,7 +175,7 @@ export default {
       var tx = {
         from: this.addressFrom,
         to: this.addressTo,
-        value: web3Utils.toWei(this.amount, "ether")
+        value: web3Utils.toWei((this.amount).toString(), "ether")
       }
       let gasAmount = new Promise((resolve, reject) => {
         web3.eth.estimateGas(tx, (err, gas) => {
@@ -196,10 +196,11 @@ export default {
         })
       })
       Promise.all([gasAmount, gasPrice]).then((values) => {
+        values = values.map((v) => new BN(v))
         this.gas = {
-          amount: values[0],
-          price: values[1],
-          total: values[1].times(values[0]).toString()
+          amount: values[0].toString(),
+          price: values[1].toString(),
+          total: values[1].mul(values[0]).toString()
         }
       })
     },
@@ -222,16 +223,17 @@ export default {
         txPromise = Promise.resolve({
           from: this.addressFrom,
           to: this.addressTo,
-          value: web3Utils.toWei(this.amount, "ether")
+          value: web3Utils.toWei((this.amount).toString(), "ether")
         })
       } else if (this.transactionCurrency === 'AE') {
         txPromise = new Promise((resolve, reject) => {
           this.$store.dispatch('aeContract').then(contract => {
+            console.log(contract)
             let tx = {
               from: this.addressFrom,
               to: this.tokenAddress,
               value: 0,
-              data: contract.transfer.getData(this.addressTo, web3Utils.toWei(this.amount, "ether"))
+              data: contract.methods.transfer(this.addressTo, web3Utils.toWei((this.amount).toString(), "ether")).encodeABI()
             }
             resolve(tx)
           }).catch(() => {

@@ -1,10 +1,9 @@
 import Bignumber from 'bignumber.js'
-import web3Utils from 'web3-utils'
 import {convertAE_USD, convertETH_USD} from '@/lib/currencyConverter'
 import ApproveButtons from '@/dialogs/ApproveButtons.vue'
 import DialogHeader from '@/dialogs/DialogHeader.vue'
+import {fromWei} from  'web3-utils'
 
-fromWei = web3Utils.fromWei
 import {
   AeModal,
   AeHeaderButton,
@@ -67,7 +66,7 @@ export default {
   computed: {
     amount () {
       const isAeTokenTx = this.isAeTokenTx
-      return isAeTokenTx ? this.tokenAmount : parseFloat(fromWei(this.transaction.value, 'ether'))
+      return isAeTokenTx ? this.tokenAmount : parseFloat(fromWei(this.transaction.value.toString(), 'ether'))
     },
     from () {
       return this.transaction.from
@@ -77,7 +76,7 @@ export default {
     },
     gas () {
       const gas = this.transaction.gas
-      return gas ? fromWei(gas, 'ether') : ''
+      return gas ? fromWei(gas.toString(), 'ether') : ''
     },
     gasEstimateStr () {
       return _createValueStr(parseFloat(this.gasEstimate), 5, 'ETH')
@@ -95,7 +94,7 @@ export default {
         if (method === 'approveAndCall' || method === 'approve' || method === 'transfer') {
           let value = this.aeTokenTx.params.find(param => param.name === '_value').value
           if (value) {
-            return fromWei(value, 'ether')
+            return fromWei(value.toString(), 'ether')
           }
         }
       }
@@ -145,7 +144,7 @@ export default {
     ]).then(
       ([gasEstimate, gasPrice]) => {
         const asWei = gasEstimate * gasPrice
-        const ethVal = fromWei(asWei, 'ether')
+        const ethVal = fromWei(asWei.toString(), 'ether')
         this.gasEstimate = ethVal
         return convertETH_USD(ethVal)
       }

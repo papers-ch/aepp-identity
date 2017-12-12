@@ -1,5 +1,5 @@
 import {AeAddress} from '@aeternity/aepp-components'
-import unit from 'ethjs-unit'
+import web3Utils from 'web3-utils'
 export default {
   name: 'ae-transaction-summary',
   props : [
@@ -14,17 +14,17 @@ export default {
   },
   filters: {
     fromWei(value) {
-      return unit.fromWei(value, 'ether')
+      return web3Utils.fromWei(value.toString(), 'ether')
     }
   },
   computed : {
     amountInWei() {
-      return unit.toWei(this.amount, 'ether')
+      return web3Utils.toWei(this.amount.toString(), 'ether')
     },
     total() {
       return this.gas.price
-        .times(this.gas.amount)
-        .plus(this.amountInWei)
+        .mul(this.gas.amount)
+        .add(this.amountInWei)
         .toString()
     }
   }

@@ -5,6 +5,7 @@ import BigNumber from 'bignumber.js'
 import ZeroClientProvider from 'web3-provider-engine/zero'
 import lightwallet from 'eth-lightwallet'
 import Web3 from 'web3'
+var BN = Web3.utils.BN;
 import Transaction from 'ethereumjs-tx'
 import {
   approveTransaction as approveTransactionDialog,
@@ -222,11 +223,15 @@ const store = (function () {
             console.log('approve', tx)
             cb(null, true)
           },
+          newBlockHeaders: function (a, b, c) {
+            console.log(a, b, c)
+          },
           rpcUrl: state.rpcUrl
         }
       },
       mkWeb3ForApps() {
-        web3ForApps = new Web3(new ZeroClientProvider(providerOptsForApps))
+        // web3ForApps = new Web3(new ZeroClientProvider(providerOptsForApps))
+        web3ForApps = new Web3(new Web3.providers.HttpProvider(providerOptsForApps.rpcUrl))
         window.web3 = web3ForApps
       },
       generateAddress ({dispatch, commit, state}, numAddresses = 1) {
@@ -267,17 +272,23 @@ const store = (function () {
         if (!web3 || !address) {
           return
         }
-        web3.eth.getBalance(address, (err, balance) => {
-          if (!err && balance !== null && !balance.equals(getters.balanceByAddress(address))) {
+        web3.eth.getBalance(address).then((balance) => {
+          balance = new BN(balance)
+          if (balance !== null && !balance.eq(getters.balanceByAddress(address))) {
             commit('setBalance', {address: address, balance: balance})
           }
+        }).catch((err) => {
+          console.log(err)
         })
 
         if (aeContract) {
-          aeContract.balanceOf(address, {}, (err, balance) => {
-            if (!err && balance !== null && !balance.equals(getters.tokenBalanceByAddress(address))) {
+          aeContract.methods.balanceOf(address).call().then((balance) => {
+            balance = new BN(balance)
+            if (balance !== null && !balance.eq(getters.tokenBalanceByAddress(address))) {
               commit('setBalance', {address: address, tokenBalance: balance})
             }
+          }).catch((err) => {
+            console.log(err)
           })
         }
       },
@@ -324,19 +335,20 @@ const store = (function () {
         }
         // that.providerOpts = opts
         try {
-          web3 = new Web3(new ZeroClientProvider(opts))
+          // let zero = new ZeroClientProvider(opts)
+          // console.log(zero)
+          // var web3 = new Web3(zero);
+
+          web3 = new Web3(new Web3.providers.HttpProvider(state.rpcUrl))
         } catch (e) {
-          console.log(e)
+          console.error(e)
         }
-        if (!web3) {
+        if (!web3) {  
           return
         }
-        try {
-          aeContract = new web3.eth.Contract(aeAbi, state.token.address)
-          window.globalTokenContract = aeContract
-        } catch (error) {
-          console.log(error)
-        }
+        aeContract = new web3.eth.Contract(aeAbi, state.token.address)
+        window.globalTokenContract = aeContract
+
         dispatch('setUnlocked', true)
 
         // dispatch('generateAddress', web3);
@@ -414,7 +426,7 @@ const store = (function () {
             // approveAndCall(_spender, _value, _data)
             if (method === 'approveAndCall' || method === 'approve' || method === 'transfer') {
               let value = web3.utils.toBN(params.find(param => param.name === '_value').value)
-              // confirmMessage += ' which transfers ' + web3.utils.fromWei(value, 'ether') + ' Æ-Token'
+              // confirmMessage += ' which transfers ' + web3.utils.fromWei(value.toString(), 'ether') + ' Æ-Token'
             }
             aeTokenTx = decodedData
           } else {
