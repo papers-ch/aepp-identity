@@ -27,8 +27,6 @@ const store = (function () {
   var aeContract
   var derivedKey
   let web3
-  let web3ForApps
-  let providerOptsForApps
   return new Vuex.Store({
     state: {
       title: '',
@@ -62,9 +60,18 @@ const store = (function () {
           icon : 'static/icons/wall.svg',
           main : 'https://wall.aepps.com'
         },
+        {
+          type : APP_TYPES.INTERNAL,
+          name : 'Network',
+          icon : 'static/icons/notary.svg',
+          main : '/network'
+        },
       ],
     },
     mutations: {
+      updateRPC (state, rpcUrl) {
+        state.rpcUrl = rpcUrl
+      },
       title (state, newtitle) {
         state.title = newtitle
       },
@@ -163,6 +170,10 @@ const store = (function () {
       }
     },
     actions: {
+      updateRPC ({commit, dispatch}, rpcURL) {
+        commit('updateRPC', rpcURL)
+        dispatch('logout')
+      },
       aeContract: () => {
         return aeContract
       },
@@ -199,41 +210,13 @@ const store = (function () {
             }
           })
       },
-      logout({getters, dispatch, state, commit}) {
+      logout ({getters, dispatch, state, commit}) {
         aeContract = null
         derivedKey = null
         web3 = null
-        web3ForApps = null
-        providerOptsForApps = null
         dispatch('setUnlocked', false)
       },
-      mkProviderOptsForApps({getters, state}) {
-        providerOptsForApps = {
-          getAccounts: function (cb) {
-            // Only show them the currently selected account.
-            cb(null, [getters.activeIdentity.address])
-          },
-          signTransaction: function (tx, cb) {
-            const t = new Transaction(tx)
-            console.log('sign', tx, t)
-            var signed = lightwallet.signing.signTx(state.keystore, derivedKey, t.serialize().toString('hex'), tx.from)
-            cb(null, '0x' + signed)
-          },
-          approveTransaction: function (tx, cb) {
-            console.log('approve', tx)
-            cb(null, true)
-          },
-          newBlockHeaders: function (a, b, c) {
-            console.log(a, b, c)
-          },
-          rpcUrl: state.rpcUrl
-        }
-      },
-      mkWeb3ForApps() {
-        web3ForApps = new Web3(new ZeroClientProvider(providerOptsForApps))
-        // web3ForApps = new Web3(new Web3.providers.HttpProvider(providerOptsForApps.rpcUrl))
-        window.web3 = web3ForApps
-      },
+
       generateAddress ({dispatch, commit, state}, numAddresses = 1) {
         if (state.keystore === null) {
           return
@@ -243,7 +226,7 @@ const store = (function () {
         localStorage.setItem('numUnlockedAddresses', addrList.length)
         dispatch('updateAllBalances')
       },
-      changeUser({commit, state}, address) {
+      changeUser ({commit, state}, address) {
         commit('setAccount', address)
         commit('setName', address.substr(0, 6))
       },
@@ -295,11 +278,13 @@ const store = (function () {
       setUnlocked({commit}, isUnlocked) {
         commit('setUnlocked', isUnlocked)
       },
-      restoreAddresses({getters, dispatch, commit, state}) {
+      restoreAddresses ({getters, dispatch, commit, state}) {
         let numUnlockedAddresses = localStorage.getItem('numUnlockedAddresses')
-        if (numUnlockedAddresses > 0) {
-          console.log('generate how many?', numUnlockedAddresses)
-          dispatch('generateAddress', numUnlockedAddresses)
+        let alreadyUnlocked = state.keystore.getAddresses().map(function (e) { return e })
+        let toUnlock = numUnlockedAddresses - alreadyUnlocked
+        if (toUnlock > 0) {
+          console.log('generate how many?', toUnlock)
+          dispatch('generateAddress', toUnlock)
         }
       },
       initWeb3({getters, dispatch, commit, state}, pwDerivedKey) {
@@ -353,8 +338,6 @@ const store = (function () {
 
         // dispatch('generateAddress', web3);
         dispatch('setAcountInterval')
-        dispatch('mkProviderOptsForApps')
-        dispatch('mkWeb3ForApps')
         dispatch('restoreAddresses')
       },
       init({commit, state}) {
@@ -398,15 +381,20 @@ const store = (function () {
           })
         })
       },
-      signTransaction ({state}, {tx, appName}) {
-        const tokenAddress = web3.utils.toHex(state.token.address).toLowerCase()
-        const to = tx.to ? web3.utils.toHex(tx.to).toLowerCase() : null
+
+      async signTransaction ({state}, {tx, appName}) {
+        const tokenAddress = web3.toHex(state.token.address).toLowerCase()
+        const to = tx.to ? web3.toHex(tx.to).toLowerCase() : null
         const isAeTokenTx = to === tokenAddress
         logTx(tx, tokenAddress)
 
         const estimateGas = getEstimatedGas.bind(undefined, web3, tx)
         const _getGasPrice = getGasPrice.bind(undefined, web3)
         let aeTokenTx = {}
+
+        tx.gas = tx.gas || await new Promise((resolve, reject) => {
+          web3.eth.estimateGas(tx, (error, result) => error ? reject(error) : resolve(result))
+        })
 
         if (isAeTokenTx) {
           let data = tx.data ? tx.data : null // data sent to contract

@@ -7,9 +7,8 @@ import {
   AeAddressInput
 } from '@aeternity/aepp-components'
 import AeTransaction from './aeTransaction/aeTransaction.vue'
-import AeTransactionSummary from './aeTransactionSummary/aeTransactionSummary.vue'
-import Transaction from 'ethereumjs-tx'
 import {swiper as Swiper, swiperSlide as SwiperSlide} from 'vue-awesome-swiper'
+import {convertAE_CHF, convertETH_CHF} from '@/lib/currencyConverter'
 
 import Web3 from 'web3'
 import ZeroClientProvider from 'web3-provider-engine/zero'
@@ -46,11 +45,9 @@ export default {
     AeSwitch,
     AeAmount,
     AeTransaction,
-    AeTransactionSummary,
     AeAddressInput,
     Swiper,
     SwiperSlide,
-    //'ae-button-icon': aeButtonIcon,
   },
   filters: {
     fromWei(value) {
@@ -70,10 +67,10 @@ export default {
       },
       transactionType: 'internal',
       transactionCurrency: 'AE',
-      exchange: null,
-      addressTo: '0xFcd59f0258E024Fd11909c0902Fd51705F385a38',
+      addressTo: null,
       addressFrom: '',
       amount: 0.0001,
+      fiatAmount: 'N/A',
       gas: null,
       web3Ready: false,
       transactionHash: null,
@@ -91,13 +88,6 @@ export default {
       return this.identities.filter((i) => {
         return i.address !== this.addressFrom
       })
-    },
-    amountInFiat() {
-      if (!this.exchange) {
-        return 'N/A'
-      }
-      return Math.round(this.exchange.USD * this.amount * 100) / 100
-
     },
     hasErrors() {
       const errors = this.errors || {}
@@ -136,9 +126,29 @@ export default {
         alert(newTransactionType)
         this.addressTo = this.identitiesTo[this.$refs.swiperTo.swiper.realIndex].address
       }
+    },
+    amount () {
+      this.recalculateFiat()
+    },
+    transactionCurrency () {
+      this.recalculateFiat()
     }
   },
   methods: {
+    async recalculateFiat () {
+      try {
+        if (this.transactionCurrency === 'AE') {
+          let fiatAmount = await convertAE_CHF(this.amount)
+          this.fiatAmount = parseFloat(fiatAmount).toFixed(2)
+        } else {
+          let fiatAmount = await convertETH_CHF(this.amount)
+          this.fiatAmount = parseFloat(fiatAmount).toFixed(2)
+        }
+      } catch (e) {
+        console.log(e)
+        this.fiatAmount = 'N/A'
+      }
+    },
     close() {
       window.history.back()
     },
@@ -263,22 +273,16 @@ export default {
     console.log('mount')
     this.createWeb3()
     this.addressFrom = this.activeIdentity.address
+    if (this.identitiesTo.length > 0) {
+      this.addressTo = this.identitiesTo[0].address
+    }
+    this.recalculateFiat()
     if (this.$route.params.txhash) {
       this.transactionHash = this.$route.params.txhash;
     }
-    const url = "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=BTC,USD,EUR"
     this.$watch(vm => [vm.addressFrom, vm.addressTo, vm.amount].join(), val => {
       this.estimateGas()
     })
     this.estimateGas()
-    fetch(url).then((response) => {
-      var contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        return response.json();
-      }
-      throw new TypeError("Oops, we haven't got JSON!");
-    }).then((json) => {
-      this.exchange = json;
-    })
   }
 }
