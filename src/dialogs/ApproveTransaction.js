@@ -66,7 +66,7 @@ export default {
   computed: {
     amount () {
       const isAeTokenTx = this.isAeTokenTx
-      return isAeTokenTx ? this.tokenAmount : parseFloat(fromWei(this.transaction.value.toString(), 'ether'))
+      return isAeTokenTx ? this.tokenAmount : this.transaction.value ? parseFloat(fromWei(this.transaction.value.toString(), 'ether')) : 0
     },
     from () {
       return this.transaction.from

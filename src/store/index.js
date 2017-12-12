@@ -230,8 +230,8 @@ const store = (function () {
         }
       },
       mkWeb3ForApps() {
-        // web3ForApps = new Web3(new ZeroClientProvider(providerOptsForApps))
-        web3ForApps = new Web3(new Web3.providers.HttpProvider(providerOptsForApps.rpcUrl))
+        web3ForApps = new Web3(new ZeroClientProvider(providerOptsForApps))
+        // web3ForApps = new Web3(new Web3.providers.HttpProvider(providerOptsForApps.rpcUrl))
         window.web3 = web3ForApps
       },
       generateAddress ({dispatch, commit, state}, numAddresses = 1) {
