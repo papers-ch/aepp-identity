@@ -69,7 +69,7 @@ export default {
   },
   mounted () {
     let url = this.$store.state.rpcUrl
-    let key = this.options.findIndex((option) => option.url.toLowerCase() === url.toLowerCase())
+    let key = this.options.findIndex((option) => url.toLowerCase().indexOf(option.url.toLowerCase()) > -1 )
     if (key > -1) {
       this.current = key
     }

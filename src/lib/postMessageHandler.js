@@ -91,7 +91,7 @@ class PostMessageHandler {
     event.source.postMessage({
       uuid: event.data.uuid,
       method: 'handShakeReturn',
-      payload: null
+      payload: this.store.state.rpcUrl
     }, '*')
   }
 }

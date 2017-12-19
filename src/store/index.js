@@ -304,7 +304,7 @@ const store = (function () {
         if (!state.keystore) {
           return
         }
-        console.log('initweb3-')
+        console.log('initweb3-', state.rpcUrl)
         derivedKey = pwDerivedKey
         const opts = {
           getAccounts: function (cb) {
@@ -338,22 +338,22 @@ const store = (function () {
         global.web3 = web3
 
         // static results
-        engine.addProvider(new FixtureSubprovider({
-          web3_clientVersion: 'ProviderEngine/v0.0.0/javascript',
-          net_listening: true,
-          eth_hashrate: '0x00',
-          eth_mining: false,
-          eth_syncing: true,
-        }))
+        // engine.addProvider(new FixtureSubprovider({
+        //   web3_clientVersion: 'ProviderEngine/v0.0.0/javascript',
+        //   net_listening: true,
+        //   eth_hashrate: '0x00',
+        //   eth_mining: false,
+        //   eth_syncing: true,
+        // }))
 
         // cache layer
-        engine.addProvider(new CacheSubprovider())
+        // engine.addProvider(new CacheSubprovider())
 
         // filters
-        engine.addProvider(new FilterSubprovider())
+        // engine.addProvider(new FilterSubprovider())
 
         // pending nonce
-        engine.addProvider(new NonceSubprovider())
+        // engine.addProvider(new NonceSubprovider())
 
         // vm
         // engine.addProvider(new VmSubprovider())
@@ -374,7 +374,7 @@ const store = (function () {
         })
 
         // start polling for blocks
-        engine.start()
+        engine.stop()
 
         // web3 = new Web3(new Web3.providers.HttpProvider(state.rpcUrl))
 
