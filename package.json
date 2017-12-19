@@ -22,6 +22,7 @@
     "eth-lightwallet": "^3.0.0",
     "ethereum-blockies-png": "^0.1.2",
     "ethjs-unit": "^0.1.6",
+    "fs": "0.0.1-security",
     "lodash": "^4.17.4",
     "moment": "^2.19.2",
     "swiper": "^4.0.6",
@@ -32,7 +33,7 @@
     "vue-router": "^3.0.0",
     "vuex": "^3.0.1",
     "web3": "^1.0.0-beta.26",
-    "web3-provider-engine": "^13.3.3"
+    "web3-provider-engine": "^13.4.0"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.6",

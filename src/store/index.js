@@ -2,7 +2,16 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import aeAbi from '../abi/aeternity-token-abi.json'
 import BigNumber from 'bignumber.js'
-import ZeroClientProvider from 'web3-provider-engine'
+
+const ProviderEngine = require('web3-provider-engine')
+const CacheSubprovider = require('web3-provider-engine/subproviders/cache.js')
+const FixtureSubprovider = require('web3-provider-engine/subproviders/fixture.js')
+const FilterSubprovider = require('web3-provider-engine/subproviders/filters.js')
+// const VmSubprovider = require('web3-provider-engine/subproviders/vm.js')
+const HookedWalletSubprovider = require('web3-provider-engine/subproviders/hooked-wallet.js')
+const NonceSubprovider = require('web3-provider-engine/subproviders/nonce-tracker.js')
+const RpcSubprovider = require('web3-provider-engine/subproviders/rpc.js')
+
 import lightwallet from 'eth-lightwallet'
 import Web3 from 'web3'
 var BN = Web3.utils.BN;
@@ -39,7 +48,8 @@ const store = (function () {
         decimals: new BigNumber(10).pow(18)
       },
       balances: [],
-      rpcUrl: 'https://kovan.infura.io',
+      rpcUrl: 'https://kovan.infura.io/',
+      infuraAPI: 'iSq28wXQFMrsqk1g8atF',
       keystore: null,
       apps : [
         {
@@ -70,7 +80,7 @@ const store = (function () {
     },
     mutations: {
       updateRPC (state, rpcUrl) {
-        state.rpcUrl = rpcUrl
+        state.rpcUrl = rpcUrl + state.infuraAPI
       },
       title (state, newtitle) {
         state.title = newtitle
@@ -124,7 +134,7 @@ const store = (function () {
     },
     getters: {
       web3 () {
-        return web3
+        return web3 || global.web3
       },
       addresses: state => {
         if (!state.keystore) {
@@ -171,6 +181,7 @@ const store = (function () {
     },
     actions: {
       updateRPC ({commit, dispatch}, rpcURL) {
+        console.log(rpcURL)
         commit('updateRPC', rpcURL)
         dispatch('logout')
       },
@@ -288,6 +299,7 @@ const store = (function () {
         }
       },
       initWeb3({getters, dispatch, commit, state}, pwDerivedKey) {
+
         console.log('initweb3')
         if (!state.keystore) {
           return
@@ -320,11 +332,50 @@ const store = (function () {
           },
           rpcUrl: state.rpcUrl
         }
-        // that.providerOpts = opts
-        let zero = new ZeroClientProvider(opts)
-        // console.log(zero)
-        web3 = new Web3(zero);
+
+        var engine = new ProviderEngine()
+        var web3 = new Web3(engine)
         global.web3 = web3
+
+        // static results
+        engine.addProvider(new FixtureSubprovider({
+          web3_clientVersion: 'ProviderEngine/v0.0.0/javascript',
+          net_listening: true,
+          eth_hashrate: '0x00',
+          eth_mining: false,
+          eth_syncing: true,
+        }))
+
+        // cache layer
+        engine.addProvider(new CacheSubprovider())
+
+        // filters
+        engine.addProvider(new FilterSubprovider())
+
+        // pending nonce
+        engine.addProvider(new NonceSubprovider())
+
+        // vm
+        // engine.addProvider(new VmSubprovider())
+
+        // id mgmt
+        engine.addProvider(new HookedWalletSubprovider(opts))
+
+        // data source
+        engine.addProvider(new RpcSubprovider({
+          rpcUrl: opts.rpcUrl,
+        }))
+
+
+        // network connectivity error
+        engine.on('error', function(err){
+          // report connectivity errors
+          console.error(err.stack)
+        })
+
+        // start polling for blocks
+        engine.start()
+
         // web3 = new Web3(new Web3.providers.HttpProvider(state.rpcUrl))
 
         if (!web3) {  
