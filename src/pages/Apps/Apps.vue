@@ -9,9 +9,10 @@
         @touchend="editMode('cancel')"
         @contextmenu.prevent
       >
+        <router-link :to="app.path">
           <div class="close-btn-boundaries">
             <ae-button
-              @click="removeAppName = app.name"
+              @click.prevent="removeAppName = app.name"
               class="remove-app-btn"
               :class="{ visible: editModeActive }"
               type="dramatic"
@@ -19,13 +20,10 @@
             >
               <ae-icon slot="icon" invert type="exciting" name="close" />
             </ae-button>
-            <router-link :to="app.path">
-              <ae-app-icon :src="app.icon" />
-            </router-link>
+            <ae-app-icon :src="app.icon" />
           </div>
-          <router-link :to="app.path">
-            <div class="app-name">{{app.name}}</div>
-          </router-link>
+          <div class="app-name">{{app.name}}</div>
+        </router-link>
       </div>
 
       <router-link to="add-app" class="app-shortcut">
