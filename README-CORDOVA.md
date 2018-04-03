@@ -36,6 +36,7 @@ After building the app you can open the generated projects in the `platforms` di
 As a proof of concept, 2 extra plugins have been added to this project:
 
 [cordova-plugin-splashscreen](https://github.com/apache/cordova-plugin-splashscreen)
+
 [phonegap-plugin-barcodescanner](https://github.com/phonegap/phonegap-plugin-barcodescanner)
 
 ## TODO
@@ -64,3 +65,8 @@ To check network connection status.
 
 https://github.com/apache/cordova-plugin-statusbar
 Control color and appearance of status bar.
+
+A good list of available and (mostly) maintained plugins can be found here:
+
+https://ionicframework.com/docs/native/
+
