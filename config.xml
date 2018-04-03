@@ -25,6 +25,9 @@
     </platform>
     <preference name="AutoHideSplashScreen" value="true" />
     <preference name="SplashScreenDelay" value="2000" />
+    <edit-config file="*-Info.plist" mode="merge" target="NSCameraUsageDescription">
+        <string>To scan QR Codes</string>
+    </edit-config>
     <engine name="browser" spec="^5.0.3" />
     <engine name="android" spec="^7.0.0" />
     <engine name="ios" spec="^4.5.4" />
@@ -36,4 +39,7 @@
         <variable name="ANDROID_PATHPREFIX" value="/" />
     </plugin>
     <plugin name="cordova-plugin-splashscreen" spec="^5.0.2" />
+    <plugin name="phonegap-plugin-barcodescanner" spec="^7.1.0">
+        <variable name="ANDROID_SUPPORT_V4_VERSION" value="27.+" />
+    </plugin>
 </widget>

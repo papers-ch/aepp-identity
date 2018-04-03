@@ -36,6 +36,7 @@
     "fuse.js": "^3.2.0",
     "lodash": "^4.17.4",
     "moment": "^2.19.2",
+    "phonegap-plugin-barcodescanner": "^7.1.0",
     "swiper": "^4.0.6",
     "vee-validate": "^2.0.3",
     "vue": "^2.5.8",
@@ -139,7 +140,10 @@
         "ANDROID_HOST": " ",
         "ANDROID_PATHPREFIX": "/"
       },
-      "cordova-plugin-splashscreen": {}
+      "cordova-plugin-splashscreen": {},
+      "phonegap-plugin-barcodescanner": {
+        "ANDROID_SUPPORT_V4_VERSION": "27.+"
+      }
     },
     "platforms": [
       "browser",

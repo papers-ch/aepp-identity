@@ -9,6 +9,12 @@
     </div>
 
     <div slot="footer">
+      <ae-button
+        type="dramatic"
+        @click="scanQR"
+      >
+        Scan QR
+      </ae-button>
       <ae-button :to="{ name: keystore ? 'login' : 'new-account' }" type="exciting">
         {{keystore ? 'Login' : 'Create Account'}}
       </ae-button>
@@ -28,7 +34,45 @@
     components: { ModalScreen, AeButton },
     computed: mapState({
       keystore: state => state.keystore
-    })
+    }),
+    methods: {
+      async scanQR () {
+        console.log('Start QR Scan')
+
+        // TODO: Wait for device ready
+        window.cordova.plugins.barcodeScanner.scan(
+          function (result) {
+            alert(
+              'We got a barcode\n' +
+                'Result: ' +
+                result.text +
+                '\n' +
+                'Format: ' +
+                result.format +
+                '\n' +
+                'Cancelled: ' +
+                result.cancelled
+            )
+          },
+          function (error) {
+            alert('Scanning failed: ' + error)
+          },
+          {
+            preferFrontCamera: false, // iOS and Android
+            showFlipCameraButton: false, // iOS and Android
+            showTorchButton: true, // iOS and Android
+            torchOn: false, // Android, launch with the torch switched on (if available)
+            saveHistory: false, // Android, save scan history (default false)
+            prompt: 'Scan QR', // Android
+            resultDisplayDuration: 500, // Android, display scanned text for X ms. 0 suppresses it entirely, default 1500
+            formats: 'QR_CODE', // default: all but PDF_417 and RSS_EXPANDED
+            orientation: 'portrait', // Android only (portrait|landscape), default unset so it rotates with the device
+            disableAnimations: false, // iOS
+            disableSuccessBeep: false // iOS and Android
+          }
+        )
+      }
+    }
   }
 </script>
 
