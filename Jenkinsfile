@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        docker { image 'beevelop/cordova:latest' }
+        docker { image 'beevelop/cordova:v8.0.0' }
     }
     stages {
         stage('Build') {
